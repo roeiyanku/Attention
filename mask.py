@@ -45,9 +45,13 @@ def get_mask_token_index(mask_token_id, inputs):
     Return the index of the token with the specified `mask_token_id`, or
     `None` if not present in the `inputs`.
     """
-    # TODO: Implement this function
-    raise NotImplementedError
+    input_ids = inputs["input_ids"][0].numpy()
 
+    for idx, token_id in enumerate(input_ids):
+        if token_id == mask_token_id:
+            return idx
+
+    return None
 
 
 def get_color_for_attention_score(attention_score):
@@ -55,28 +59,42 @@ def get_color_for_attention_score(attention_score):
     Return a tuple of three integers representing a shade of gray for the
     given `attention_score`. Each value should be in the range [0, 255].
     """
-    # TODO: Implement this function
-    raise NotImplementedError
+    # Ensure attention_score is within the expected range [0, 1]
+    if not 0 <= attention_score <= 1:
+        raise ValueError("Attention score must be between 0 and 1")
 
+    # Convert the attention score to a grayscale value
+    # 0 -> 0 (black), 1 -> 255 (white)
+    grayscale_value = int(attention_score * 255)
+
+    # Return the grayscale color as an RGB tuple (R, G, B)
+    return (grayscale_value, grayscale_value, grayscale_value)
 
 
 def visualize_attentions(tokens, attentions):
     """
-    Produce a graphical representation of self-attention scores.
+    Produce a graphical representation of self-attention scores for all layers and heads.
 
-    For each attention layer, one diagram should be generated for each
-    attention head in the layer. Each diagram should include the list of
-    `tokens` in the sentence. The filename for each diagram should
-    include both the layer number (starting count from 1) and head number
-    (starting count from 1).
+    For each attention layer, a diagram will be generated for each attention head.
+    Each diagram will visualize the attention weights across all tokens in the input.
     """
-    # TODO: Update this function to produce diagrams for all layers and heads.
-    generate_diagram(
-        1,
-        1,
-        tokens,
-        attentions[0][0][0]
-    )
+    num_layers = len(attentions)  # Number of layers in the model
+    num_heads = len(attentions[0][0])  # Number of heads per layer
+
+    # Loop over each layer
+    for layer_idx in range(num_layers):
+        # Loop over each head in the current layer
+        for head_idx in range(num_heads):
+            # Extract attention weights for the current layer and head
+            attention_weights = attentions[layer_idx][0][head_idx]
+
+            # Generate diagram for this layer and head
+            generate_diagram(
+                layer_number=layer_idx + 1,  # Start layer count from 1
+                head_number=head_idx + 1,  # Start head count from 1
+                tokens=tokens,
+                attention_weights=attention_weights
+            )
 
 
 def generate_diagram(layer_number, head_number, tokens, attention_weights):
